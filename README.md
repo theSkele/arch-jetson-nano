@@ -24,52 +24,124 @@ It will work on
 ### Basic Knowledge:
 * How to save with `nano`: `CTRL` + `X` then `Y` then `ENTER`
 
-## Build it yourself (Debian/Ubuntu)
-So before we begin i use a Linux based operating system with `apt` but for those who like `apt-get` can use that.<br>
-it's all up to you.
+## Build it yourself (Debian/Ubuntu + Arch)
+Originally provided for Debian/Ubuntu, I have added support for Arch </br>
+Only difference is package manager (apt, apt-get vs. pacman) </br> 
 
 
-I love housekeeping so let's start with:
+## Keep your system up to date!
+Debian/Ubuntu:
 ```
-$ sudo apt update
-$ sudo apt upgrade -y
-$ sudo apt autoremove -y
-$ sudo apt autoclean
+sudo apt update
 ```
+```
+sudo apt upgrade -y
+```
+```
+sudo apt autoremove -y
+```
+```
+sudo apt autoclean
+```
+
+Arch:
+```
+pacman -Syu
+```
+Fix issues, Reboot if necessary.
+
 
 Before we begin we need some tools so let's download them
+Debian/Ubuntu:
 ```
-$ sudo apt install curl wget git nano
-$ sudo apt-get install qemu-user-static
+sudo apt install curl wget git nano openssl
+```
+```
+sudo apt-get install qemu-user-static
+```
+Arch:
+```
+pacman -S curl wget git nano qemu-user-static dpkg openssl
 ```
 
-Create a `Folder` for this project
+Create Directory for Project
 ```
-$ mkdir ProjectFolder
-$ cd ProjectFolder
+mkdir Tegra && cd Tegra
 ```
 
 Download the Nvidia Jetson Nano L4T Driver Package (BSP) and extract
 ```
-$ wget https://developer.nvidia.com/embedded/l4t/r32_release_v5.1/r32_release_v5.1/t210/jetson-210_linux_r32.5.1_aarch64.tbz2
-$ sudo tar jxpf jetson-210_linux_r32.5.1_aarch64.tbz2
-$ sudo rm -r jetson-210_linux_r32.5.1_aarch64.tbz2
-$ cd Linux_for_Tegra
+wget https://developer.nvidia.com/downloads/remetpack-463r32releasev73t210jetson-210linur3273aarch64tbz2
 ```
+```
+sudo tar jxpf Jetson-210_Linux_R32.7.3_aarch64.tbz2
+```
+```
+cd Linux_for_Tegra
+```
+* Keep tar in case something gets messed up, why re-download?
 
 Download Arch Linux aarch64 and extract
 ```
-$ cd rootfs
-$ wget http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
-$ sudo tar -xpf ArchLinuxARM-aarch64-latest.tar.gz
-$ sudo rm -r ArchLinuxARM-aarch64-latest.tar.gz
+cd rootfs
 ```
+```
+wget http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
+```
+```
+sudo tar -xpf ArchLinuxARM-aarch64-latest.tar.gz
+```
+* Keep tar in case something gets messed up, why re-download?
 
 
-Now we need to add some lines to the `nv_customize_rootfs.sh` file
+Now we need to modify some lines in the `apply_binaries.sh` file:
 ```
-$ cd ../nv_tools/scripts/
-$ nano nv_customize_rootfs.sh
+cd ..
+```
+```
+nano apply_binaries.sh
+```
+Find
+```
+echo "Extracting the configuration files for the supplied root filesystem to ${LDK_ROOTFS_DIR}"
+	pushd "${LDK_ROOTFS_DIR}" > /dev/null 2>&1
+	tar -I lbzip2 -xpmf "${LDK_NV_TEGRA_DIR}/config.tbz2"
+	popd > /dev/null 2>&1
+
+	echo "Extracting graphics_demos to ${LDK_ROOTFS_DIR}"
+	pushd "${LDK_ROOTFS_DIR}" > /dev/null 2>&1
+	tar -I lbzip2 -xpmf "${LDK_NV_TEGRA_DIR}/graphics_demos.tbz2"
+	popd > /dev/null 2>&1
+
+	echo "Extracting the firmwares and kernel modules to ${LDK_ROOTFS_DIR}"
+	( cd "${LDK_ROOTFS_DIR}" ; tar -I lbzip2 -xpmf "${LDK_KERN_DIR}/kernel_supplements.tbz2" )
+```
+Replace with:
+```
+echo "Extracting the configuration files for the supplied root filesystem to ${LDK_ROOTFS_DIR}"
+	pushd "${LDK_ROOTFS_DIR}" > /dev/null 2>&1
+	tar --keep-directory-symlink -I lbzip2 -xpmf "${LDK_NV_TEGRA_DIR}/config.tbz2"
+	popd > /dev/null 2>&1
+
+	echo "Extracting graphics_demos to ${LDK_ROOTFS_DIR}"
+	pushd "${LDK_ROOTFS_DIR}" > /dev/null 2>&1
+	tar --keep-directory-symlink -I lbzip2 -xpmf "${LDK_NV_TEGRA_DIR}/graphics_demos.tbz2"
+	popd > /dev/null 2>&1
+
+	echo "Extracting the firmwares and kernel modules to ${LDK_ROOTFS_DIR}"
+	( cd "${LDK_ROOTFS_DIR}" ; tar --keep-old-files -I lbzip2 -xpmf "${LDK_KERN_DIR}/kernel_supplements.tbz2" )
+```
+* This adds --keep-directory-symlinks for RootFS,
+--keep-directory-symlink for Graphics,
+and --keep-old-files for Kernel firmwares and modules
+
+
+Next we need to add some lines to the `nv_customize_rootfs.sh` file:
+```
+cd nv_tools/scripts/
+```
+```
+nano nv_customize_rootfs.sh
 ```
 
 Find
@@ -107,44 +179,55 @@ Now save this with the following command because we use nano: `CTRL` + `X` then 
 
 Now we need to create some folders
 ```
-$ cd ../../nv_tegra
-$ mkdir nvidia_drivers config nv_tools nv_sample_apps/nvgstapps
+cd ../../nv_tegra
+```
+```
+mkdir nvidia_drivers config nv_tools nv_sample_apps/nvgstapps
 ```
 
 After the folders are created we extract .tbz2 and move the folders
 ```
-$ sudo tar -xpjf nvidia_drivers.tbz2 -C nvidia_drivers/ && sudo rm -r nvidia_drivers.tbz2
-
-$ sudo tar -xpjf config.tbz2 -C config/ && sudo rm -r config.tbz2
-
-$ sudo tar -xpjf nv_tools.tbz2 -C nv_tools/ && sudo rm -r nv_tools.tbz2
-
-$ sudo tar -xpjf nv_sample_apps/nvgstapps.tbz2 -C nv_sample_apps/nvgstapps/ && sudo rm -r nv_sample_apps/nvgstapps.tbz2
+sudo tar -xpjf nvidia_drivers.tbz2 -C nvidia_drivers/ && sudo rm -r nvidia_drivers.tbz2
+```
+```
+sudo tar -xpjf config.tbz2 -C config/ && sudo rm -r config.tbz2
+```
+```
+sudo tar -xpjf nv_tools.tbz2 -C nv_tools/ && sudo rm -r nv_tools.tbz2
+```
+```
+sudo tar -xpjf nv_sample_apps/nvgstapps.tbz2 -C nv_sample_apps/nvgstapps/ && sudo rm -r nv_sample_apps/nvgstapps.tbz2
 ```
 
 ```
-$ cd ../nv_tegra/nvidia_drivers
-$ sudo mv lib/* usr/lib/
-$ sudo rm -r lib
+cd ../nv_tegra/nvidia_drivers
+```
+```
+sudo mv lib/* usr/lib/
+```
+```
+sudo rm -r lib
 ```
 
 ```
-$ sudo mv usr/lib/aarch64-linux-gnu/* usr/lib/
-$ sudo rm -r usr/lib/aarch64-linux-gnu
+sudo mv usr/lib/aarch64-linux-gnu/* usr/lib/
+```
+```
+sudo rm -r usr/lib/aarch64-linux-gnu
 ```
 
 ```
-$ sudo nano etc/nv_tegra_release
+sudo nano etc/nv_tegra_release
 ```
 
 Find
 ```
-0c165125388fbd943e7f8b37a272dec7c5d57c15 */usr/lib/aarch64-linux-gnu/tegra/libnvmm.so
+*/usr/lib/aarch64-linux-gnu/tegra/libnvmm.so
 ```
 
 Repalce with:
 ```
-0c165125388fbd943e7f8b37a272dec7c5d57c15 */usr/lib/tegra/libnvmm.so
+*/usr/lib/tegra/libnvmm.so
 ```
 Now save this with the following command because we use nano: `CTRL` + `X` then `Y` and hit `enter`
 
@@ -154,7 +237,7 @@ to point to the right directory and add the `tegra-egl` entry.
 
 The contents of `nvidia-tegra.conf` 
 ```
-$ sudo nano etc/ld.so.conf.d/nvidia-tegra.conf
+sudo nano etc/ld.so.conf.d/nvidia-tegra.conf
 ```
 
 It should look like this:
@@ -168,32 +251,39 @@ It should look like this:
 ### Changes to nv_tools Package
 The tegrastats script should be moved from home/ubuntu into the /usr/bin directory. This removes the dependency on a user called ubuntu.
 ```
-$ cd ../../../nv_tegra/nv_tools
-$ mkdir -p usr/bin
+cd ../../../nv_tegra/nv_tools
+```
+```
+mkdir -p usr/bin
 ```
 
 ### Changes to nvgstapps Package
 ```
-$ cd ../../nv_tegra/nv_sample_apps/nvgstapps/
-$ sudo mv usr/lib/aarch64-linux-gnu/* usr/lib/
-$ sudo rm -r usr/lib/aarch64-linux-gnu
+cd ../../nv_tegra/nv_sample_apps/nvgstapps/
+```
+```
+sudo mv usr/lib/aarch64-linux-gnu/* usr/lib/
+```
+```
+sudo rm -r usr/lib/aarch64-linux-gnu
 ```
 
 ### Finalizing Configuration Changes
 When you have finished making all the listed changes, repackage the files:
 ```
-$ cd ../../../nv_tegra/nvidia_drivers
-$ sudo tar -cpjf ../nvidia_drivers.tbz2 *
-
-$ cd ../config
-$ sudo tar -cpjf ../config.tbz2 *
-
-$ cd ../nv_tools
-$ sudo tar -cpjf ../nv_tools.tbz2 *
-
-$ cd ../nv_sample_apps/nvgstapps
-$ sudo tar -cpjf ../nvgstapps.tbz2 *
-$ cd ../..
+cd ../../../nv_tegra/nvidia_drivers && sudo tar -cpjf ../nvidia_drivers.tbz2 *
+```
+```
+cd ../config && sudo tar -cpjf ../config.tbz2 *
+```
+```
+cd ../nv_tools && sudo tar -cpjf ../nv_tools.tbz2 *
+```
+```
+cd ../nv_sample_apps/nvgstapps && sudo tar -cpjf ../nvgstapps.tbz2 *
+```
+```
+cd ../..
 ```
 ### Changes to rootfs
 The following are changes that will be made to contents in your rootfs directory.
@@ -205,7 +295,7 @@ To create the systemd service, we will need the service descriptor file, that te
 
 Hence need to create a service file as below in 
 ```
-$ cd ../rootfs/usr/lib/systemd/system
+cd ../rootfs/usr/lib/systemd/system
 ```
 
 Create a file with `nano` 
@@ -294,13 +384,15 @@ Now save this with the following command because we use nano: `CTRL` + `X` then 
 
 
 Instructions on how to enable the script are in After First Boot section. If you wish to enable the script before flashing / first boot, create the following symbolic link to enable the service.
+
+* This MUST be executed after apply_binaries, so the nvidia-tegra service is in place.
 ```
 cd ../../../../etc/systemd/system/sysinit.target.wants/
 ```
 ```
 ln -s ../../../../usr/lib/systemd/system/nvidia-tegra.service nvidia-tegra.service
 ```
-This should be executed after apply_binaries, so the nvidia-tegra service is in place.
+* This MUST be executed after apply_binaries, so the nvidia-tegra service is in place.
 
 ### Pacman Configuration
 As we have installed a custom kernel to boot linux on the jetson-nano-devkit, it is necessary to update pacman.conf to ignore updates to the kernel package.
@@ -320,7 +412,7 @@ Search now for
 ```
 replace it with:
 ```
-IgnorePkg=linux
+IgnorePkg=linux-aarch64
 ```
 close and save it.
 
@@ -339,13 +431,17 @@ The steps for flashing the Arch Linux image to the Jetson are no different than 
 Run the following commands to apply the configuration, create the image, and flash it to the Jetson
 
 You need to have your Jetson nano in recovery mode with jumpers:
-![alt text](https://docs.Volt.cx/images/50171c51fd3ebadee6e11c600850ef2d.png)
+* Dependant on Jetson Nano Board, please compare your pin-layout to Image and follow relevant steps!
+<img src="https://i.imgur.com/ZYjVGYM.png">
 
-*   Jumper need to be in 3 and 4
-*   Connect your micro USB cable to your jetson nano
-*   Now connect the USB in your PC/Laptop
+Board A02:
+ - Jumper needs to on J40 Button Header: Pins 3 & 4 (2nd to bottom row of J40, Highlighted in Red)
+ - Connect microUSB to Jetson Nano and Host Computer
 
-Open your terminal en type:
+Board B01:
+- Jumper needs to be on J50 Button Header: Pins 3 & 4 (Highlighted in Red)
+
+Open your terminal and type:
 ```
 lsusb
 ```
@@ -356,13 +452,55 @@ Now apply the NVIDIA specific configuration, binaries, and the L4T kernel
 ```
 sudo ./apply_binaries.sh
 ```
+Enable nvidia-tegra.service by creating symbolic link, refer to section above
+
+Optional: Before Flashing setup the Root Filesystem with pre-configured users and groups. Refer below
+
 Create the image from the rootfs directory and flash the image to the Jetson
 ```
 sudo ./flash.sh jetson-nano-devkit mmcblk0p1
 ```
 Your device should reboot and prompt you to login. The default login for Arch Linux ARM is `root`/`root`.
 
+## Root Filesystem Customization:
+Before Flashing, after Applying Binaries, setup the Root Filesystem with pre-configured users and groups
+```
+cd rootfs/etc
+```
+```
+nano passwd
+```
+Add user to bottom with format:
+```
+userName:EncryptedPassword:UserID(start w/1000):GroupID(root/wheel is 0):UserInfo(FullName,phone,email,extraInfo):HomeDirPath:ShellPath
+```
+IMPORTANT: EncryptedPassword's value is "x", it is defined in 'shadow' (We will modify after)
+```
+exampleAdmin:x:1000:0:Example Admin:/home/admin/:/bin/bash
+```
+Now we generate encrypted password for shadow using openssl:
 
+Create password in password.txt for user and encrypt
+```
+nano password.txt
+```
+```
+openssl passwd -6 password.txt
+```
+Copy output from openssl, and add to section in 'shadow':
+```
+nano shadow
+```
+Edit shadow and add user entry accordingly to formate below:
+```
+userName:EncryptedPasswordHere:LastPassChangeUnixTime:MinDaysPassChange:MaxDaysPassChange:WarnDaysPassChange:DisableInactiveUserDays:ExpirationUnixTime
+```
+```
+exampleAdmin:$6$oEqu9zePqbMKoMGt$ohC2Nq.YGddug.p9egUvbSA7ZVeqpBquUWPYpA9jjXVB8yZR59lBV7q3XfFKj52w9GUrG6RFm67wuU77qqcAk/:19214::::::
+```
+For LastPassChange, just set as something between 19000-19395 (Jan 8, 2022 - Feb 7, 2023)
+
+The process for creating groups is relevatily the same with a group file and a gshadow file.
 
 
 
@@ -371,4 +509,4 @@ Your device should reboot and prompt you to login. The default login for Arch Li
 # WORK IN PROGRESS
 
 ## Extra Info
-* L4T VERSION: R32.5.1
+* L4T VERSION: R32.7.3
