@@ -316,7 +316,7 @@ cd ../..
 ```
 
 ### 3.10 Making Changes to the Rootfs
-The following changes will be made to the contents of your rootfs directory.
+Arch Linux uses systemd by default. So we create the service and init script.
 
 ```bash
 cd ../rootfs/usr/lib/systemd/system
@@ -349,7 +349,75 @@ Paste the following content into the file:
 ```bash
 #!/bin/bash
 
-# Script content goes here
+if [ -e /sys/power/state ]; then
+    chmod 0666 /sys/power/state
+fi
+
+if [ -e /sys/devices/soc0/family ]; then
+    SOCFAMILY="`cat /sys/devices/soc0/family`"
+fi
+
+if [ "$SOCFAMILY" = "Tegra210" ] &&
+    [ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq ]; then
+    sudo bash -c "echo -n 510000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq"
+fi
+
+if [ -d /sys/devices/system/cpu/cpuquiet/tegra_cpuquiet ] ; then
+    echo 500 > /sys/devices/system/cpu/cpuquiet/tegra_cpuquiet/down_delay
+    echo 1 > /sys/devices/system/cpu/cpuquiet/tegra_cpuquiet/enable
+elif [ -w /sys/module/cpu_tegra210/parameters/auto_hotplug ] ; then
+    echo 1 > /sys/module/cpu_tegra210/parameters/auto_hotplug
+fi
+
+if [ -e /sys/module/cpuidle/parameters/power_down_in_idle ] ; then
+    echo "Y" > /sys/module/cpuidle/parameters/power_down_in_idle
+elif [ -e /sys/module/cpuidle/parameters/lp2_in_idle ] ; then
+    echo "Y" > /sys/module/cpuidle/parameters/lp2_in_idle
+fi
+
+if [ -e /sys/block/sda0/queue/read_ahead_kb ]; then
+   echo 2048 > /sys/block/sda0/queue/read_ahead_kb
+fi
+if [ -e /sys/block/sda1/queue/read_ahead_kb ]; then
+    echo 2048 > /sys/block/sda1/queue/read_ahead_kb
+fi
+
+for uartInst in 0 1 2 3
+do
+    uartNode="/dev/ttyHS$uartInst"
+    if [ -e "$uartNode" ]; then
+        ln -s /dev/ttyHS$uartInst /dev/ttyTHS$uartInst
+    fi
+done
+
+machine=`cat /sys/devices/soc0/machine`
+if [ "${machine}" = "jetson-nano-devkit" ] ; then
+    echo 4 > /sys/class/graphics/fb0/blank
+            BoardRevision=`cat /proc/device-tree/chosen/board_info/major_revision`
+            if [ "${BoardRevision}" = "A" ] ||
+                    [ "${BoardRevision}" = "B" ] ||
+                    [ "${BoardRevision}" = "C" ] ||
+                    [ "${BoardRevision}" = "D" ]; then
+                    echo 0 > /sys/devices/platform/tegra-otg/enable_device
+                    echo 1 > /sys/devices/platform/tegra-otg/enable_host
+            fi
+fi
+
+if [ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors ]; then
+    read governors < /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+    case $governors in
+        *interactive*)
+            echo interactive > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+            if [ -e /sys/devices/system/cpu/cpufreq/interactive ] ; then
+                echo "1224000" >/sys/devices/system/cpu/cpufreq/interactive/hispeed_freq
+                echo "95" >/sys/devices/system/cpu/cpufreq/interactive/target_loads
+                echo "20000" >/sys/devices/system/cpu/cpufreq/interactive/min_sample_time
+            fi
+                ;;
+        *)
+                ;;
+    esac
+fi
 
 echo "Success! Exiting"
 exit 0
