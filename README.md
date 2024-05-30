@@ -1,41 +1,37 @@
 # Tutorial: Building Arch Linux for Nvidia Jetson Nano
 
-This tutorial provides step-by-step instructions on how to build an updated version of Arch Linux for Nvidia Jetson Nano 2GB and 4GB boards.
+This tutorial provides step-by-step instructions on how to build Arch Linux for Nvidia Jetson Nano 2GB and 4GB boards.
 
 ## Table of Contents
-1. [General Information](#1-general-information)
-2. [Requirements](#2-requirements)
-3. [Building Arch Linux for Jetson Nano](#3-building-arch-linux-for-jetson-nano)
-   - 3.1 [Downloading the Required Files](#31-downloading-the-required-files)
-   - 3.2 [Modifying the apply_binaries.sh File](#32-modifying-the-apply_binariessh-file)
-   - 3.3 [Modifying the nv_customize_rootfs.sh File](#33-modifying-the-nv_customize_rootfssh-file)
-   - 3.4 [Creating the Required Folders](#34-creating-the-required-folders)
-   - 3.5 [Extracting and Moving Files](#35-extracting-and-moving-files)
-   - 3.6 [Modifying nv_tegra_release and nvidia-tegra.conf Files](#36-modifying-nv_tegra_release-and-nvidia-tegraconf-files)
-   - 3.7 [Making Changes to the nv_tools Package](#37-making-changes-to-the-nv_tools-package)
-   - 3.8 [Making Changes to the nvgstapps Package](#38-making-changes-to-the-nvgstapps-package)
-   - 3.9 [Repackaging NVIDIA Binaries](#39-repackaging-nvidia-binaries)
-   - 3.10 [Making Changes to the Rootfs](#310-making-changes-to-the-rootfs)
-4. [Flashing the Jetson Nano](#4-flashing-the-jetson-nano)
-5. [Autobuild Scripts](#5-autobuild-scripts)
-   - 5.1 [autobuild-arch-nano.sh](#51-autobuild-arch-nanosh)
-   - 5.2 [fish-autobuild-arch-nano.sh](#52-fish-autobuild-arch-nanosh)
-6. [Extra Information](#6-extra-information)
+1. [Requirements](#1-requirements)
+   - 1.1 [Downloading and Extracting Required Archives](#11-downloading-and-extracting-required-archives)
+2. [Building Arch Linux for Jetson Nano](#2-building-arch-linux-for-jetson-nano)
+   - 2.1 [Modifying apply_binaries.sh](#21-modifying-apply_binariessh)
+   - 2.2 [Modifying nv_customize_rootfs.sh](#22-modifying-nv_customize_rootfssh)
+   - 2.3 [Creating Required Directories](#23-creating-required-directories)
+   - 2.4 [Extracting Archives and Moving Files](#24-extracting-archives-and-moving-files)
+   - 2.5 [Modifying nv_tegra_release and nvidia-tegra.conf](#25-modifying-nv_tegra_release-and-nvidia-tegraconf)
+   - 2.6 [Modifying nv_tools](#26-modifying-nv_tools)
+   - 2.7 [Modifying nvgstapps](#27-modifying-nvgstapps)
+   - 2.8 [Repackaging NVIDIA Binaries](#28-repackaging-nvidia-binaries)
+   - 2.9 [Modifying RootFS](#29-modifying-rootfs)
+3. [Flashing the Jetson Nano](#3-flashing-the-jetson-nano)
+   - 3.1 [Apply NVIDIA Configurations and Binaries](#31-apply-nvidia-configurations-and-binaries)
+5. [Autobuild Scripts](#4-autobuild-scripts)
+   - 4.1 [autobuild-arch-nano.sh](#41-autobuild-arch-nanosh)
+   - 4.2 [fish-autobuild-arch-nano.sh](#42-fish-autobuild-arch-nanosh)
+6. [Extra Information](#5-extra-information)
 
-## 1. General Information
-This tutorial will guide you through the process of building your own updated version of Arch Linux for Nvidia Jetson Nano boards. It is applicable to both the 2GB and 4GB versions of Jetson Nano.
-
-## 2. Requirements
+## 1. Requirements
 Before starting the build process, make sure you have the following:
 
 - Jetson Nano board
 - Micro SD Card
 - Micro USB Cable
 - 1 jumper (for recovery mode)
-- Basic knowledge of using the nano text editor (CTRL + X, Y, ENTER to save)
+- Basic knowledge of using the nano text editor (CTRL + X [to save], then Y [confirm save])
 
-## 3. Building Arch Linux for Jetson Nano
-### 3.1 Downloading the Required Files
+### 1.1 Downloading and Extracting Required Archives
 Download the Nvidia Jetson Nano L4T Driver Package (BSP) and Arch-aarch64 RootFS:
 
 ```bash
@@ -43,7 +39,7 @@ wget https://developer.nvidia.com/downloads/remetpack-463r32releasev73t210jetson
 wget http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
 ```
 
-Extract the downloaded files:
+Extract the BSP and RootFS archives:
 
 ```bash
 sudo tar jxpf Jetson-210_Linux_R32.7.3_aarch64.tbz2
@@ -51,8 +47,10 @@ cd Linux_for_Tegra/rootfs
 sudo tar -xpf ../../ArchLinuxARM-aarch64-latest.tar.gz
 ```
 
-### 3.2 Modifying the apply_binaries.sh File
-Open the `apply_binaries.sh` file for editing:
+## 2. Building Arch Linux for Jetson Nano
+
+### 2.1 Modifying apply_binaries.sh
+Open and edit `apply_binaries.sh`:
 
 ```bash
 nano ../apply_binaries.sh
@@ -180,10 +178,10 @@ Add --keep-directory-symlink to each tar entry or replace them with:
 	fi
 ```
 
-Save the file and exit the editor.
+Save and exit the editor.
 
-### 3.3 Modifying the nv_customize_rootfs.sh File
-Open the `nv_customize_rootfs.sh` file for editing:
+### 2.2 Modifying nv_customize_rootfs.sh
+Open and edit `nv_customize_rootfs.sh`:
 
 ```bash
 nano ../nv_tools/scripts/nv_customize_rootfs.sh
@@ -228,17 +226,17 @@ else
 fi
 ```
 
-Save the file and exit the editor.
+Save and exit the editor.
 
-### 3.4 Creating the Required Folders
-Create the necessary folders for the project:
+### 2.3 Creating Required Directories
+Create the required directories:
 
 ```bash
 cd ../nv_tegra
 mkdir nvidia_drivers config nv_tools nv_sample_apps/nvgstapps
 ```
 
-### 3.5 Extracting and Moving Files
+### 2.4 Extracting Archives and Moving Files
 Extract the .tbz2 files and move the folders:
 
 ```bash
@@ -251,10 +249,10 @@ sudo mv lib/* usr/lib/ && sudo rm -r lib/
 sudo mv usr/lib/aarch64-linux-gnu/* usr/lib/ && sudo rm -r usr/lib/aarch64-linux-gnu/
 ```
 
-Save the file and exit the editor.
+Save and exit the editor.
 
-### 3.6 Modifying nv_tegra_release and nvidia-tegra.conf Files
-Open the `nv_tegra_release` file for editing:
+### 2.5 Modifying nv_tegra_release and nvidia-tegra.conf
+Open `nv_tegra_release`:
 
 ```bash
 sudo nano etc/nv_tegra_release
@@ -272,7 +270,7 @@ Replace them with:
 */usr/lib/tegra/
 ```
 
-Open the `nvidia-tegra.conf` file for editing:
+Open `nvidia-tegra.conf`:
 
 ```bash
 sudo nano etc/ld.so.conf.d/nvidia-tegra.conf
@@ -285,27 +283,29 @@ Make sure the file contains the following lines:
 /usr/lib/tegra-egl
 ```
 
-Save the file and exit the editor.
+Save and exit the editor.
 
-### 3.7 Making Changes to the nv_tools Package
+### 2.6 Modifying nv_tools
 
 * For some reason, 
 
-Move the `tegrastats` script from `home/ubuntu` to the `/usr/bin` directory:
+Move `tegrastats` from `home/ubuntu` to `/usr/bin`:
 
 ```bash
 cd ../nv_tools
 mkdir -p usr/bin
 ```
 
-### 3.8 Making Changes to the nvgstapps Package
+### 2.7 Modifying nvgstapps
+Move everything in `usr/lib/aarch64-linux-gnu/` into `usr/lib/` and remove `usr/lib/aarch64-linux-gnu` directory
+
 ```bash
 cd ../../nv_tegra/nv_sample_apps/nvgstapps/
 sudo mv usr/lib/aarch64-linux-gnu/* usr/lib/ && sudo rm -r usr/lib/aarch64-linux-gnu/
 ```
 
-### 3.9 Repackaging NVIDIA Binaries
-Repackage the files after making all the listed changes:
+### 2.8 Repackaging NVIDIA Binaries
+Re-archive directories containing prior modifications
 
 ```bash
 cd ../../../nv_tegra/nvidia_drivers && sudo tar -cpjf ../nvidia_drivers.tbz2 *
@@ -315,7 +315,7 @@ cd ../nv_sample_apps/nvgstapps && sudo tar -cpjf ../nvgstapps.tbz2 *
 cd ../..
 ```
 
-### 3.10 Making Changes to the Rootfs
+### 2.9 Modifying RootFS
 Arch Linux uses systemd by default. So we create the service and init script.
 
 ```bash
@@ -323,7 +323,7 @@ cd ../rootfs/usr/lib/systemd/system
 sudo nano nvidia-tegra.service
 ```
 
-Paste the following content into the file:
+Paste the following into `nvidia-tegra.service`:
 
 ```bash
 [Unit]
@@ -338,13 +338,15 @@ ExecStart=/usr/bin/nvidia-tegra-init-script
 WantedBy=multi-user.target
 ```
 
-Create the `nvidia-tegra-init-script`:
+Save and exit the editor.
+
+Create `nvidia-tegra-init-script`:
 
 ```bash
 sudo nano ../../../bin/nvidia-tegra-init-script
 ```
 
-Paste the following content into the file:
+Paste the following into `nvidia-tegra-init-script`:
 
 ```bash
 #!/bin/bash
@@ -423,7 +425,7 @@ echo "Success! Exiting"
 exit 0
 ```
 
-Save the files and exit the editor.
+Save and exit the editor.
 
 Open and edit pacman.conf to ignore updates to the kernel package:
 
@@ -437,16 +439,16 @@ Find line:
 and replace with:
 `IgnorePkg=linux-aarch64`
 
-Save the file and exit the editor.
+Save and exit the editor.
 
-## 4. Flashing the Jetson Nano
-Make sure your Jetson Nano is in recovery mode with using a Jumper.
+## 3. Flashing the Jetson Nano
+Make sure your Jetson Nano is in recovery mode using a Jumper.
 Depending on which Jetson Nano Board you have, this pin will be in different locations, refer to the Image below:
 ![Recovery Mode Pin Location](https://imgur.com/ZYjVGYM.png)
 
-Connect the Jetson Nano to your host using a micro USB cable.
+Connect the Jetson Nano to your host computer using a micro USB cable.
 
-Open your terminal and run the following command to check if the Jetson Nano is recognized:
+Open a terminal on host and run the following command to check if the Jetson Nano is recognized:
 
 ```bash
 lsusb
@@ -454,6 +456,7 @@ lsusb
 
 You should see "NVIDIA Corp. APX" listed.
 
+### 3.1 Apply NVIDIA Configurations and Binaries
 Apply the NVIDIA-specific configuration, binaries, and the L4T kernel:
 
 ```bash
@@ -466,7 +469,7 @@ Copy `ld-linux-aarch64.so.1` to enable booting:
 sudo cp rootfs/usr/lib/ld-linux-aarch64.so.1 rootfs/lib/ld-linux-aarch64.so.1
 ```
 
-To enable the `nvidia-tegra.service` script, create a symbolic link:
+To enable `nvidia-tegra.service`, create a symbolic link:
 
 ```bash
 cd rootfs/etc/systemd/system/sysinit.target.wants/
@@ -481,14 +484,14 @@ sudo ./flash.sh jetson-nano-qspi-sd mmcblk0p1
 
 After flashing, your device should reboot and prompt you to login. The default login for Arch Linux ARM is `root/root`.
 
-## 5. Autobuild Scripts
-### 5.1 autobuild-arch-nano.sh
+## 4. Autobuild Scripts
+### 4.1 autobuild-arch-nano.sh
 The `autobuild-arch-nano.sh` script automates the process of building Arch Linux for Nvidia Jetson Nano. It performs all the necessary steps mentioned in this tutorial. You can execute the script to build the system automatically.
 
-### 5.2 fish-autobuild-arch-nano.sh
+### 4.2 fish-autobuild-arch-nano.sh
 The `fish-autobuild-arch-nano.sh` script is a FISH shell version of `autobuild-arch-nano.sh`. It provides the same functionality but is designed for the FISH shell. You can use this script if you prefer to work with FISH instead of BASH.
 
-## 6. Extra Information
+## 5. Extra Information
 - L4T Version: R32.7.3
 
-Please note that this tutorial is a work in progress and may be updated in the future.
+Updated Version, Thank You @Yarpii
