@@ -6,8 +6,8 @@ set YELLOW "\x1b[1;33m"
 set RESET "\x1b[0m"
 
 # Check if tarballs are already downloaded
-if not test -f Jetson-210_Linux_R32.7.5_aarch64.tbz2
-    wget --output-document=Jetson-210_Linux_R32.7.5_aarch64.tbz2 https://developer.nvidia.com/downloads/remetpack-463r32releasev73t210jetson-210linur3275aarch64tbz2
+if not test -f Jetson-210_Linux_R32.7.6_aarch64.tbz2
+    wget --output-document=Jetson-210_Linux_R32.7.6_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r32_release_v7.6/t210/jetson-210_linux_r32.7.6_aarch64.tbz2
 end
 
 if not test -f ArchLinuxARM-aarch64-latest.tar.gz
@@ -33,7 +33,7 @@ echo -e "$RED Extracting Jetson and Arch Linux ARM Archives...$YELLOW"
 
 # Extract Tegra kernel if directory doesn't exist
 if not test -d Linux_for_Tegra
-    sudo tar jxpf Jetson-210_Linux_R32.7.5_aarch64.tbz2
+    sudo tar jxpf Jetson-210_Linux_R32.7.6_aarch64.tbz2
 end
 
 # Extract ArchLinux-ARM filesystem if doesnt exist
