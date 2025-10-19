@@ -474,6 +474,16 @@ and replace with:
 
 Save and exit the editor.
 
+### 2.10 Update `/lib` structure
+In Archlinux, `/lib` is just a symbolic link to `/usr/lib`.
+```bash
+cd Linux_for_Tegra
+
+sudo rsync -avxHAX lib/ usr/lib/
+sudo rm -rf lib
+sudo ln -s usr/lib lib
+```
+
 ## 3. Flashing the Jetson Nano
 Make sure your Jetson Nano is in recovery mode using a Jumper.
 Depending on which Jetson Nano Board you have, this pin will be in different locations, refer to the Image below:

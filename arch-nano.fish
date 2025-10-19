@@ -206,7 +206,12 @@ echo -e "$RED Done, $WHITE creating symlinks"
 
 sudo cp rootfs/usr/lib/ld-linux-aarch64.so.1 rootfs/lib/ld-linux-aarch64.so.1
 
-cd rootfs/etc/systemd/system/sysinit.target.wants/
-sudo ln -s ../../../../usr/lib/systemd/system/nvidia-tegra.service nvidia-tegra.service
+sudo ln -sr rootfs/usr/lib/systemd/system/nvidia-tegra.service rootfs/etc/systemd/system/sysinit.target.wants/nvidia-tegra.service
+
+echo -e "$RED Done, $WHITE updating /lib structure..."
+
+sudo rsync -avxHAX lib/ usr/lib/
+sudo rm -rf lib
+sudo ln -s usr/lib lib
 
 echo -e "$RED Done, $WHITE Script has Finished!$RESET"
