@@ -119,17 +119,18 @@ ExecStart=/usr/bin/nvidia-tegra-init-script
 WantedBy=multi-user.target' | sudo tee Linux_for_Tegra/rootfs/usr/lib/systemd/system/nvidia-tegra.service > /dev/null
 
 # Create nvidia-tegra-init-script
-echo '#!/bin/bash
+sudo tee Linux_for_Tegra/rootfs/usr/bin/nvidia-tegra-init-script > /dev/null <<'EOF'
+#!/bin/bash
 
 if [ -e /sys/power/state ]; then
     chmod 0666 /sys/power/state
 fi
 
 if [ -e /sys/devices/soc0/family ]; then
-    SOCFAMILY="\$(cat /sys/devices/soc0/family)"
+    SOCFAMILY="$(cat /sys/devices/soc0/family)"
 fi
 
-if [ "\$SOCFAMILY" = "Tegra210" ] &&
+if [ "$SOCFAMILY" = "Tegra210" ] &&
     [ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq ]; then
     sudo bash -c "echo -n 510000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq"
 fi
@@ -156,20 +157,20 @@ fi
 
 for uartInst in 0 1 2 3
 do
-    uartNode="/dev/ttyHS\$uartInst"
-    if [ -e "\$uartNode" ]; then
-        ln -s /dev/ttyHS\$uartInst /dev/ttyTHS\$uartInst
+    uartNode="/dev/ttyHS$uartInst"
+    if [ -e "$uartNode" ]; then
+        ln -s /dev/ttyHS$uartInst /dev/ttyTHS$uartInst
     fi
 done
 
-machine=\$(cat /sys/devices/soc0/machine)
-if [ "\${machine}" = "jetson-nano-devkit" ] ; then
+machine=$(cat /sys/devices/soc0/machine)
+if [ "${machine}" = "jetson-nano-devkit" ] ; then
     echo 4 > /sys/class/graphics/fb0/blank
-    BoardRevision=\$(cat /proc/device-tree/chosen/board_info/major_revision)
-    if [ "\${BoardRevision}" = "A" ] ||
-            [ "\${BoardRevision}" = "B" ] ||
-            [ "\${BoardRevision}" = "C" ] ||
-            [ "\${BoardRevision}" = "D" ]; then
+    BoardRevision=$(cat /proc/device-tree/chosen/board_info/major_revision)
+    if [ "${BoardRevision}" = "A" ] ||
+            [ "${BoardRevision}" = "B" ] ||
+            [ "${BoardRevision}" = "C" ] ||
+            [ "${BoardRevision}" = "D" ]; then
         echo 0 > /sys/devices/platform/tegra-otg/enable_device
         echo 1 > /sys/devices/platform/tegra-otg/enable_host
     fi
@@ -177,7 +178,7 @@ fi
 
 if [ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors ]; then
     read governors < /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
-    case \$governors in
+    case $governors in
         *interactive*)
             echo interactive > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
             if [ -e /sys/devices/system/cpu/cpufreq/interactive ] ; then
@@ -192,7 +193,9 @@ if [ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors ]; then
 fi
 
 echo "Success! Exiting!"
-exit 0' | sudo tee Linux_for_Tegra/rootfs/usr/bin/nvidia-tegra-init-script > /dev/null
+exit 0
+EOF
+sudo chmod +x Linux_for_Tegra/rootfs/usr/bin/nvidia-tegra-init-script
 
 echo -e "${RED}Applying Binaries (apply_binaries.sh)${YELLOW}"
 
@@ -207,3 +210,5 @@ cd rootfs/etc/systemd/system/sysinit.target.wants/
 sudo ln -s ../../../../usr/lib/systemd/system/nvidia-tegra.service nvidia-tegra.service
 
 echo -e "${RED}Done, ${WHITE}Script has Finished!${RESET}"
+echo "Now connect the Nano in recovery mode and run:"
+echo "cd Linux_for_Tegra && sudo ./flash.sh jetson-nano-qspi-sd mmcblk0p1"
