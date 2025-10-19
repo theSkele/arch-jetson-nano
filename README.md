@@ -14,6 +14,7 @@ This tutorial provides step-by-step instructions on how to build Arch Linux for 
 		- [2.7 Modifying nvgstapps](#27-modifying-nvgstapps)
 		- [2.8 Repackaging NVIDIA Binaries](#28-repackaging-nvidia-binaries)
 		- [2.9 Modifying RootFS](#29-modifying-rootfs)
+  		- [2.10 Arch Filesystem Structure](#210-arch-filesystem-structure) 
 	- [3. Flashing the Jetson Nano](#3-flashing-the-jetson-nano)
 		- [3.1 Apply NVIDIA Configurations and Binaries](#31-apply-nvidia-configurations-and-binaries)
 	- [4. Autobuild Scripts](#4-autobuild-scripts)
@@ -474,7 +475,7 @@ and replace with:
 
 Save and exit the editor.
 
-### 2.10 Update `/lib` structure
+### 2.10 Arch Filesystem Structure
 In Archlinux, `/lib` is just a symbolic link to `/usr/lib`.
 ```bash
 cd Linux_for_Tegra
@@ -536,12 +537,12 @@ BASH: `arch-nano.sh`
 FISH: `arch-nano.fish`
 
 ## 5. Extra Information
-[L4T Kernel Customization](https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3275/index.html#page/Tegra%20Linux%20Driver%20Package%20Development%20Guide/kernel_custom.html#)
+[L4T Kernel Customization](https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3276/index.html#page/Tegra%20Linux%20Driver%20Package%20Development%20Guide/kernel_custom.html#)
 
-[L4T Developer Guide](https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3275/index.html)
+[L4T Developer Guide](https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3276/index.html)
 
-[L4T Downloads & Links](https://developer.nvidia.com/embedded/linux-tegra-r3275)
+[L4T Downloads & Links](https://developer.nvidia.com/embedded/linux-tegra-r3276)
 
-L4T 32.7.5 (JetPack 4.6.5)
+L4T 32.7.6 (JetPack 4.6.6)
 
 Updated Version, Thank You @Yarpii
